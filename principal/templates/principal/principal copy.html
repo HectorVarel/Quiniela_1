@@ -1,0 +1,35 @@
+{% extends "principal/base.html" %}
+
+{% block content %}
+<!-- Bienvenida -->
+<h1 style="color: #333; text-align: center;">Bienvenido a la Quiniela Pitera 8.0</h1>
+
+<!-- Descripción -->
+<p style="color: #666; text-align: center;">¡Compite contra mentiras como Saem o Rafael!</p>
+
+<!-- Separador -->
+<hr style="border: 1px solid #ccc; margin: 20px auto;">
+
+<!-- Instrucciones -->
+<h2 style="color: #333; text-align: center;">Instrucciones</h2>
+<div style="text-align: center;">
+    <ul style="color: #666; display: inline-block; text-align: left;">
+        <li>Regístrate en nuestra plataforma (No disponible).</li>
+        <li>Llena la quiniela de acuerdo a la carta que te tocó</li>
+        <li>Realiza tus predicciones para cada partido.</li>
+        <li>¡Espera los resultados y sigue tu posición en la tabla de clasificación!</li>
+    </ul>
+</div>
+
+
+<!-- Ganador parcial -->
+<div style="background-color: #f2f2f2; padding: 20px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); margin-top: 30px;">
+    <h2 style="color: #333; text-align: center;">¡Felicidades (POR AHORA)!</h2>
+    <p style="color: #666; text-align: center;">Primer lugar: {{jornadas.nombre}} {{jornadas.suma_j}} pts</p>
+</div>
+
+<!-- Anuncio -->
+<div style="background-color: #f2f2f2; padding: 20px; border-radius: 5px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); margin-top: 30px;">
+    <h2 style="color: #333; text-align: center;">¡Se viene la Jornada 10 o la 9, ya ni supe!</h2>
+</div>
+{% endblock %}

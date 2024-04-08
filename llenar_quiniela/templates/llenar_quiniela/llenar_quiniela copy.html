@@ -1,0 +1,217 @@
+{% extends "principal/base.html" %}
+
+{% block content %}
+<!-- Lista horizontal -->
+<ul style="background-color: rgb(180, 180, 180);">
+    <li>OD: Opción Doble</li>
+    <li>OT: Opción Triple</li>
+    <li>DQ: Doble Quiniela</li>
+    <li>M: Multiplicador</li>
+    <li>J: Jugador Gol</li>
+    <li>MA: Marcador</li>
+    <li>RC: Roba Carta</li>
+    <li>IQ: Intercambio de Quiniela</li>
+    <li>NC: No Carta</li>
+</ul>
+
+<form id="miFormulario" action="{% url 'ingresar_resultado' %}" method="post" style="text-align: center;" style="background-color: rgb(180, 180, 180);">
+    {% csrf_token %}
+    <label for="cartas">Selecciona tu nombre:</label>
+    <select id="cartas" name="cartas" onchange="document.getElementById('miFormulario').submit()">
+        {% for valor in cartas %}
+            <option value="{{ valor.nombre }} {{ valor.carta }}" {% if valor.nombre == carta_seleccionada %} selected {% endif %}>{{valor.nombre}} ({{valor.carta}})</option>
+        {% endfor %}
+    </select>
+</form>
+
+<p style="text-align: center; font-size: 25px; background-color: rgb(150, 150, 150);"><strong>Recuerda que no puedes usar tu carta en los juegos pendientes</strong> </p>
+
+<body>
+    <div style="text-align: center;">
+        {% for dato in foto_url %}
+            <img src="data:image/png;base64,{{ dato.foto }}" alt="Imagen específica">
+        {% endfor %}
+    </div>
+</body>
+
+<div style="text-align: center; font-size: 40px;">
+    <p>{{ consejo }}</p>
+</div>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Imágenes</title>
+    <style>
+        #canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #download-button {
+            margin-top: 40px;
+            width: 150px;
+            height: 80px;
+            margin-bottom: 30px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+</head>
+
+<body>
+    <p style="text-align: center; font-size: 18px; background-color: rgb(150, 150, 150);"><strong></strong> Nota: Si tienes la carta de marcador, tal vez sea mas facil llenarla por Whatsapp </p>
+    <p style="text-align: center; font-size: 25px; background-color: rgb(150, 150, 150);"><strong>RELLENA TU QUINIELA </strong> </p>
+</body>
+
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <br>
+    <label for="color">Color del marcador:</label>
+    <input type="color" id="color" value="#000000">
+    <br>
+    <label for="size">Tamaño del marcador:</label>
+    <input type="range" id="size" min="1" max="100" value="10">
+    <br>
+    <button onclick="toggleEraser()">Activar / Desactivar borrador</button>
+    <br>
+    <button onclick="downloadImage()">Descargar imagen</button>
+
+    <script>
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var colorInput = document.getElementById('color');
+        var sizeInput = document.getElementById('size');
+        var isDrawing = false;
+        var lastX = 0;
+        var lastY = 0;
+        var eraserEnabled = false;
+
+        // Cargar la imagen en el canvas
+        var img = new Image();
+        {% for dato in jor %}
+        img.src = 'data:image/png;base64,{{ dato.jornada }}';
+        {% endfor %}
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+        };
+
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('touchstart', function(e) {
+            preventDefaultScroll(e);
+            handleTouchStart(e);
+        });
+        canvas.addEventListener('touchmove', function(e) {
+            preventDefaultScroll(e);
+            handleTouchMove(e);
+        });
+        canvas.addEventListener('touchend', handleTouchEnd);
+
+        function handleMouseDown(e) {
+            isDrawing = true;
+            lastX = e.clientX - canvas.getBoundingClientRect().left;
+            lastY = e.clientY - canvas.getBoundingClientRect().top;
+        }
+
+        function handleMouseMove(e) {
+            if (isDrawing) {
+                var x = e.clientX - canvas.getBoundingClientRect().left;
+                var y = e.clientY - canvas.getBoundingClientRect().top;
+                if (eraserEnabled) {
+                    enableEraser();
+                } else {
+                    disableEraser();
+                }
+                drawLine(lastX, lastY, x, y);
+                lastX = x;
+                lastY = y;
+            }
+        }
+
+        function handleMouseUp() {
+            isDrawing = false;
+        }
+
+        function handleTouchStart(e) {
+            isDrawing = true;
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = canvas.width / rect.width;
+            var scaleY = canvas.height / rect.height;
+            lastX = (e.touches[0].clientX - rect.left) * scaleX;
+            lastY = (e.touches[0].clientY - rect.top) * scaleY;
+        }
+
+        function handleTouchMove(e) {
+            if (isDrawing) {
+                var rect = canvas.getBoundingClientRect();
+                var scaleX = canvas.width / rect.width;
+                var scaleY = canvas.height / rect.height;
+                var x = (e.touches[0].clientX - rect.left) * scaleX;
+                var y = (e.touches[0].clientY - rect.top) * scaleY;
+                if (eraserEnabled) {
+                    enableEraser();
+                } else {
+                    disableEraser();
+                }
+                drawLine(lastX, lastY, x, y);
+                lastX = x;
+                lastY = y;
+            }
+        }
+
+        function handleTouchEnd() {
+            isDrawing = false;
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = colorInput.value;
+            ctx.lineWidth = sizeInput.value;
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function downloadImage() {
+            var dataURL = canvas.toDataURL('image/png');
+            var link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'imagen_editada.png';
+            link.click();
+        }
+
+        function preventDefaultScroll(event) {
+            event.preventDefault();
+        }
+
+        function toggleEraser() {
+    eraserEnabled = !eraserEnabled;
+    if (eraserEnabled) {
+        ctx.strokeStyle = '#FFFFFF'; // Establecer el color a blanco
+        enableEraser();
+    } else {
+        ctx.strokeStyle = colorInput.value; // Restaurar el color original
+        disableEraser();
+    }
+}
+
+        function enableEraser() {
+            ctx.globalCompositeOperation = "destination-out";
+        }
+
+        function disableEraser() {
+            ctx.globalCompositeOperation = "source-over";
+        }
+    </script>
+</body>
+
+
+{% endblock %}
